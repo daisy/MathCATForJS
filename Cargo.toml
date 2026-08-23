@@ -1,0 +1,12 @@
+[package]
+name = "mathcat-js"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mathcat = { git = "https://github.com/daisy/MathCAT.git", branch = "main" }
+diplomat = "0.8"
+diplomat-runtime = "0.8"

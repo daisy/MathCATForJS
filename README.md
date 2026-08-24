@@ -1,2 +1,2 @@
 # MathCATForJS
-A JavaScript interface for MathCAT
+A JavaScript interface for MathCAT created using Diplomat

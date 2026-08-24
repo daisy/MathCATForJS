@@ -1,12 +1,20 @@
 [package]
-name = "mathcat-js"
+name = "mathcat_js"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "JavaScript/WASM interface for MathCAT (for MathCAT info, see crates.io or nsoiffer.github.io/MathCAT)"
+resolver = "2"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
+[features]
+"include-zip" = ["mathcat/include-zip"]
+"no-unsafe" = ["mathcat/no-unsafe"]
 
 [dependencies]
 mathcat = { git = "https://github.com/daisy/MathCAT.git", branch = "main" }
-diplomat = "0.8"
-diplomat-runtime = "0.8"
+diplomat = "0.16"
+diplomat-runtime = "0.16"
+
+[lib]
+name = "libmathcat_js"
+crate-type = ["cdylib"]

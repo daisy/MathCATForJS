@@ -1,20 +1,15 @@
-//! Diplomat FFI bridge over MathCAT's public interface (`crate::interface`).
+//! JavaScript/WASM interface for MathCAT.
 //!
-//! This module wraps `interface.rs`'s existing free functions, for consumption from JS/WASM 
-//! (and any other language Diplomat targets), without changing anything about the native 
-//! Rust interface used by `main.rs`, `mathml2text.rs`, or the test suite.
-//!
-//! MathCAT tracks "the current document"/"the current navigation node" in thread-locals rather
-//! than through a caller-held handle (see `interface.rs`), so there's no per-instance state to
-//! hold here. `MathCat` exists only because Diplomat requires bridge functions to be attached to
-//! a type; it's used purely as a namespace of static methods (`MathCat.setMathml(...)` in JS).
+//! This crate wraps MathCAT's public Rust interface (`libmathcat`) with a Diplomat bridge for
+//! consumption from JavaScript/WASM. MathCAT tracks state in thread-locals rather than through a
+//! caller-held handle, so `MathCat` exists only as a namespace of static methods
+//! (`MathCat.setMathml(...)` in JS).
 
 #[diplomat::bridge]
 pub mod ffi {
     use diplomat_runtime::DiplomatWrite;
+    use libmathcat::interface;
     use std::fmt::Write as _;
-
-    use crate::interface;
 
     #[diplomat::opaque]
     pub struct MathCat;
@@ -30,7 +25,7 @@ pub mod ffi {
         }
     }
 
-    fn to_ffi_error(e: crate::errors::Error) -> Box<MathCatError> {
+    fn to_ffi_error(e: libmathcat::errors::Error) -> Box<MathCatError> {
         Box::new(MathCatError(interface::errors_to_string(&e)))
     }
 
@@ -67,18 +62,15 @@ pub mod ffi {
     }
 
     impl MathCat {
-        /// See [`interface::set_rules_dir`].
         pub fn set_rules_dir(dir: &str) -> Result<(), Box<MathCatError>> {
             interface::set_rules_dir(dir).map_err(to_ffi_error)
         }
 
-        /// See [`interface::get_version`].
         pub fn get_version(write: &mut DiplomatWrite) {
             let _ = write.write_str(&interface::get_version());
             write.flush();
         }
 
-        /// See [`interface::set_mathml`]. Writes the cleaned-up (canonical) MathML into `write`.
         pub fn set_mathml(mathml_str: &str, write: &mut DiplomatWrite) -> Result<(), Box<MathCatError>> {
             let cleaned = interface::set_mathml(mathml_str).map_err(to_ffi_error)?;
             let _ = write.write_str(&cleaned);
@@ -86,7 +78,6 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::get_spoken_text`].
         pub fn get_spoken_text(write: &mut DiplomatWrite) -> Result<(), Box<MathCatError>> {
             let text = interface::get_spoken_text().map_err(to_ffi_error)?;
             let _ = write.write_str(&text);
@@ -94,7 +85,6 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::get_overview_text`].
         pub fn get_overview_text(write: &mut DiplomatWrite) -> Result<(), Box<MathCatError>> {
             let text = interface::get_overview_text().map_err(to_ffi_error)?;
             let _ = write.write_str(&text);
@@ -102,7 +92,6 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::get_preference`].
         pub fn get_preference(name: &str, write: &mut DiplomatWrite) -> Result<(), Box<MathCatError>> {
             let value = interface::get_preference(name).map_err(to_ffi_error)?;
             let _ = write.write_str(&value);
@@ -110,12 +99,10 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::set_preference`].
         pub fn set_preference(name: &str, value: &str) -> Result<(), Box<MathCatError>> {
             interface::set_preference(name, value).map_err(to_ffi_error)
         }
 
-        /// See [`interface::get_braille`].
         pub fn get_braille(nav_node_id: &str, write: &mut DiplomatWrite) -> Result<(), Box<MathCatError>> {
             let braille = interface::get_braille(nav_node_id).map_err(to_ffi_error)?;
             let _ = write.write_str(&braille);
@@ -123,7 +110,6 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::get_navigation_braille`].
         pub fn get_navigation_braille(write: &mut DiplomatWrite) -> Result<(), Box<MathCatError>> {
             let braille = interface::get_navigation_braille().map_err(to_ffi_error)?;
             let _ = write.write_str(&braille);
@@ -131,7 +117,6 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::do_navigate_keypress`].
         pub fn do_navigate_keypress(
             key: usize,
             shift_key: bool,
@@ -147,7 +132,6 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::do_navigate_command`].
         pub fn do_navigate_command(command: &str, write: &mut DiplomatWrite) -> Result<(), Box<MathCatError>> {
             let speech = interface::do_navigate_command(command).map_err(to_ffi_error)?;
             let _ = write.write_str(&speech);
@@ -155,12 +139,10 @@ pub mod ffi {
             Ok(())
         }
 
-        /// See [`interface::set_navigation_node`].
         pub fn set_navigation_node(id: &str, offset: usize) -> Result<(), Box<MathCatError>> {
             interface::set_navigation_node(id, offset).map_err(to_ffi_error)
         }
 
-        /// See [`interface::get_navigation_mathml`]. Writes the MathML into `write`, returns the offset.
         pub fn get_navigation_mathml(write: &mut DiplomatWrite) -> Result<usize, Box<MathCatError>> {
             let (mathml, offset) = interface::get_navigation_mathml().map_err(to_ffi_error)?;
             let _ = write.write_str(&mathml);
@@ -168,7 +150,6 @@ pub mod ffi {
             Ok(offset)
         }
 
-        /// See [`interface::get_navigation_mathml_id`]. Writes the id into `write`, returns the offset.
         pub fn get_navigation_mathml_id(write: &mut DiplomatWrite) -> Result<usize, Box<MathCatError>> {
             let (id, offset) = interface::get_navigation_mathml_id().map_err(to_ffi_error)?;
             let _ = write.write_str(&id);
@@ -176,13 +157,11 @@ pub mod ffi {
             Ok(offset)
         }
 
-        /// See [`interface::get_braille_position`].
         pub fn get_braille_position() -> Result<BraillePosition, Box<MathCatError>> {
             let (start, end) = interface::get_braille_position().map_err(to_ffi_error)?;
             Ok(BraillePosition { start, end })
         }
 
-        /// See [`interface::get_navigation_node_from_braille_position`]. Writes the id into `write`, returns the offset.
         pub fn get_navigation_node_from_braille_position(
             position: usize,
             write: &mut DiplomatWrite,
@@ -194,21 +173,18 @@ pub mod ffi {
             Ok(offset)
         }
 
-        /// See [`interface::get_supported_braille_codes`].
         pub fn get_supported_braille_codes() -> Result<Box<MathCatStringList>, Box<MathCatError>> {
             interface::get_supported_braille_codes()
                 .map(|v| Box::new(MathCatStringList(v)))
                 .map_err(to_ffi_error)
         }
 
-        /// See [`interface::get_supported_languages`].
         pub fn get_supported_languages() -> Result<Box<MathCatStringList>, Box<MathCatError>> {
             interface::get_supported_languages()
                 .map(|v| Box::new(MathCatStringList(v)))
                 .map_err(to_ffi_error)
         }
 
-        /// See [`interface::get_supported_speech_styles`].
         pub fn get_supported_speech_styles(lang: &str) -> Result<Box<MathCatStringList>, Box<MathCatError>> {
             interface::get_supported_speech_styles(lang)
                 .map(|v| Box::new(MathCatStringList(v)))

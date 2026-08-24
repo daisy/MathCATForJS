@@ -8,16 +8,16 @@ env:
 
 jobs:
   wasm-check:
-    name: Build js-api feature for wasm32-unknown-unknown
+    name: Build for wasm32-unknown-unknown
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Add wasm32 target
       run: rustup target add wasm32-unknown-unknown
-    - name: cargo check (wasm32, js-api)
-      run: cargo check --target wasm32-unknown-unknown --no-default-features --features "js-api,include-zip" --lib
-    - name: clippy (wasm32, js-api)
-      run: cargo clippy --target wasm32-unknown-unknown --no-default-features --features "js-api,include-zip" --lib
+    - name: cargo check (wasm32)
+      run: cargo check --target wasm32-unknown-unknown --no-default-features --features include-zip --lib
+    - name: clippy (wasm32)
+      run: cargo clippy --target wasm32-unknown-unknown --no-default-features --features include-zip --lib
 
   diplomat-codegen:
     name: Generate JS/TS bindings with diplomat-tool
@@ -27,6 +27,6 @@ jobs:
     - name: Install diplomat-tool
       run: cargo install diplomat-tool --locked
     - name: Generate bindings
-      run: diplomat-tool js bindings/js -e src/wasm_api.rs
+      run: diplomat-tool js bindings/js -e src/lib.rs
     - name: Sanity-check output exists
       run: test -n "$(find bindings/js -name '*.mjs')" && test -n "$(find bindings/js -name '*.d.ts')"
